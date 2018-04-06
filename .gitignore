@@ -117,3 +117,4 @@ venv.bak/
 .mypy_cache/
 *.jpg
 .idea/
+xtrx.py
