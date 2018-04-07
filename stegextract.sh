@@ -87,15 +87,15 @@ if [[ ! -z ${ext+x} ]]; then
 	esac
 else
 	# Look for SOI bytes in xxd output to detect image type
-	HEAD=$(xxd $image 2> /dev/null  | head)
-	if [[ $(grep IHDR <<< $HEAD) ]]; then
+	head_hexdump=$(xxd $image 2> /dev/null  | head)
+	if [[ $(grep IHDR <<< $head_hexdump) ]]; then
 		png
-	elif [[ $(grep ffd8 <<< $HEAD) ]]; then
+	elif [[ $(grep ffd8 <<< $head_hexdump) ]]; then
 		jpeg
-	elif [[ $(grep GIF89a <<< $HEAD) ]]; then
+	elif [[ $(grep GIF89a <<< $head_hexdump) ]]; then
 		gif
 	else
-		echo "Cannot recognize image format"
+		echo "Unknown or unsupported image format"
 		exit 1
 	fi
 fi
