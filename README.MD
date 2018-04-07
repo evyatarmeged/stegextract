@@ -1,5 +1,5 @@
 # Stegextract
-Extract hidden files and strings from image
+Bash script to extract hidden files and strings from images.
 
 ## Description
 Stegextract will detect the image type and will look for any trailing data after the image closing bytes.<br>
