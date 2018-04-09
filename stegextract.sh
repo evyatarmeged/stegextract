@@ -88,7 +88,7 @@ if [[ ! -z ${ext+x} ]]; then
 else
 	# Look for SOI bytes in xxd output to detect image type
 	head_hexdump=$(xxd $image 2> /dev/null  | head)
-	if [[ $(grep IHDR <<< $head_hexdump) ]]; then
+	if [[ $(grep '8950 4e47 0d0a 1a0a' <<< $head_hexdump) ]]; then
 		png
 	elif [[ $(grep ffd8 <<< $head_hexdump) ]]; then
 		jpeg
