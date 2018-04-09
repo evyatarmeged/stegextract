@@ -113,3 +113,6 @@ else
 	strings -6 $image > $outfile"_strings"
 	echo "Done"
 fi
+
+# TODO: Consider adding Rar!.. & PK.. file signatures lookup and extraction
+# TODO: Consider image within image lookup and extraction
