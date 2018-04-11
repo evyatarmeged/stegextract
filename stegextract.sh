@@ -92,7 +92,7 @@ else
 		png
 	elif [[ $(grep ffd8 <<< $head_hexdump) ]]; then
 		jpeg
-	elif [[ $(grep GIF89a <<< $head_hexdump) ]]; then
+	elif [[ $(grep '4749 4638 3961' <<< $head_hexdump) ]]; then
 		gif
 	else
 		echo "Unknown or unsupported image format"
@@ -110,7 +110,7 @@ if [ $result = "empty" ]; then
 else
 	echo "Extracted hidden file data: "$data
 	echo "Extracting strings..."
-	strings -6 $image > $outfile"_strings"
+	strings -6 $image > $outfile'.txt'
 	echo "Done"
 fi
 
