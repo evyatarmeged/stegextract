@@ -41,6 +41,15 @@ while (( "$#" )); do
   esac
 done
 
+jpg_start="ffd8"
+jpg_end="ff d9"
+
+png_start="8950 4e47 0d0a 1a0a"
+png_end="49 45 4e 44 ae 42 60 82"
+
+gif_start="4749 4638 3961"
+gif_end="00 3b"
+
 if [ ! -f $image ]; then
   echo "$0: File $image not found."
   exit 1
@@ -50,22 +59,27 @@ if [ -z ${outfile+x} ]; then
  outfile=${image%.*}"_dumps";
 fi
 
+extract()  {
+	curr=${@:1}
+	xxd -c1 -p $image | tr "\n" " " | sed -n -e "s/.*\( $curr \)\(.*\).*/\2/p" | xxd -r -p > $outfile
+}
+
 jpeg() {
 	# Grab everything after 0xFF 0xD9
 	echo "Detected image format: JPG";
-	xxd -c1 -p $image | tr "\n" " " | sed -n -e "s/.*\( ff d9 \)\(.*\).*/\2/p" | xxd -r -p > $outfile
+	extract $jpg_end
 }
 
 png() {
 	# Grab everything after "IEND.B`" chunk
 	echo "Detected image format: PNG";
-	xxd -c1 -p $image | tr "\n" " " | sed -n -e "s/.*\( 49 45 4e 44 ae 42 60 82\)\(.*\).*/\2/p" | xxd -r -p > $outfile
+	extract $png_end
 }
 
 gif() {
 	# Grab everything after "0x00 0x3B"
 	echo "Detected image format: GIF"
-	xxd -c1 -p $image | tr "\n" " " | sed -n -e "s/.*\( 00 3b\)\(.*\).*/\2/p" | xxd -r -p > $outfile
+	extract $gif_end
 }
 
 if [[ ! -z ${ext+x} ]]; then
@@ -88,11 +102,11 @@ if [[ ! -z ${ext+x} ]]; then
 else
 	# Look for SOI bytes in xxd output to detect image type
 	head_hexdump=$(xxd $image 2> /dev/null  | head)
-	if [[ $(grep '8950 4e47 0d0a 1a0a' <<< $head_hexdump) ]]; then
+	if [[ $(grep "$png_start" <<< $head_hexdump) ]]; then
 		png
-	elif [[ $(grep ffd8 <<< $head_hexdump) ]]; then
+	elif [[ $(grep "$jpg_start" <<< $head_hexdump) ]]; then
 		jpeg
-	elif [[ $(grep '4749 4638 3961' <<< $head_hexdump) ]]; then
+	elif [[ $(grep "$gif_start" <<< $head_hexdump) ]]; then
 		gif
 	else
 		echo "Unknown or unsupported image format"
@@ -104,15 +118,17 @@ data=$(file $outfile)
 data=${data##*:}
 result=$(echo $data | head -n1 | sed -e 's/\s.*$//')
 if [ $result = "empty" ]; then
-	echo "No hidden data found in file";
+	echo "No hidden data found in file"
 	rm $outfile
 	exit 1
 else
 	echo "Extracted hidden file data: "$data
 	echo "Extracting strings..."
-	strings -6 $image > $outfile'.txt'
+	strings -6 $image > $outfile.txt
 	echo "Done"
 fi
+
+
 
 # TODO: Consider adding Rar!.. & PK.. file signatures lookup and extraction
 # TODO: Consider image within image lookup and extraction
