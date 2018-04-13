@@ -41,6 +41,8 @@ while (( "$#" )); do
   esac
 done
 
+file_type=""
+
 jpg_start="ffd8"
 jpg_end="ff d9"
 
@@ -49,6 +51,8 @@ png_end="49 45 4e 44 ae 42 60 82"
 
 gif_start="4749 4638 3961"
 gif_end="00 3b"
+
+pk_start="50 3b 03 04"
 
 if [ ! -f $image ]; then
   echo "$0: File $image not found."
@@ -65,22 +69,32 @@ extract()  {
 }
 
 jpeg() {
+	file_type="jpg"
 	# Grab everything after 0xFF 0xD9
-	echo "Detected image format: JPG";
+	echo "Detected image format: JPG"
 	extract $jpg_end
 }
 
 png() {
+	file_type="png"
 	# Grab everything after "IEND.B`" chunk
-	echo "Detected image format: PNG";
+	echo "Detected image format: PNG"
 	extract $png_end
 }
 
 gif() {
+	file_type="gif"
 	# Grab everything after "0x00 0x3B"
 	echo "Detected image format: GIF"
 	extract $gif_end
 }
+
+#further_analysis() {
+# Assign to var:
+# PNG Match: xxd -c1 -p happypassover.jpg | tr "\n" " " | sed -n 's/.*\(89 50 4e 47 0d 0a 1a 0a\).*/\1/p'
+# Write magic number to file + trailing
+#
+#}
 
 if [[ ! -z ${ext+x} ]]; then
 	case ${ext,,} in
