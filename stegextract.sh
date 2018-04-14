@@ -52,8 +52,6 @@ png_end="49 45 4e 44 ae 42 60 82"
 gif_start="4749 4638 3961"
 gif_end="00 3b"
 
-pk_start="50 3b 03 04"
-
 if [ ! -f $image ]; then
   echo "$0: File $image not found."
   exit 1
@@ -89,12 +87,53 @@ gif() {
 	extract $gif_end
 }
 
-#further_analysis() {
-# Assign to var:
-# PNG Match: xxd -c1 -p happypassover.jpg | tr "\n" " " | sed -n 's/.*\(89 50 4e 47 0d 0a 1a 0a\).*/\1/p'
-# Write magic number to file + trailing
-#
-#}
+hard_extract() {
+	curr_ext="$1"
+	magic=${@:2}
+	magic_no_ws=$(echo -e "$magic" | tr -d '[:space:]')
+	echo $magic_no_ws
+	if [ "$(xxd -ps -c100 happypassover.jpg | grep -c $magic_no_ws)" -ge 0 ] ; then
+		echo "passed located"
+		format_file=$outfile"_secret_"$curr_ext
+		upper_ext=$(echo "$curr_ext" | tr /a-z/ /A-Z/)
+		echo "Found embedded: $upper_ext"
+		echo $magic | xxd -r -p > $format_file
+		xxd -c1 -p $image | tr "\n" " " | sed -n -e "s/.*\( $curr \)\(.*\).*/\2/p" | xxd -r -p >> $format_file
+	fi
+}
+
+
+analysis() {
+	# Look for magic numbers in file except for the already detected image type
+	case "$1" in
+	"png")
+		hard_extract "png" "89 50 4e 47 0d 0a 1a 0a"
+		;;
+	"jpg")
+		hard_extract "jpg" "ff d8 ff e0"
+		;;
+	"gif")
+		hard_extract "gif" "47 49 46 38 39 61"
+		;;
+	"zip")
+		hard_extract "zip" "50 3b 03 04"
+		;;
+	"rar")
+		hard_extract "rar" "52 61 72 21 1a 07 01 00"
+		;;
+	esac
+}
+
+embedded_lookup() {
+# Try and better locate embedded files (e.g, no trailing data)
+	echo "Performing deep analysis..."
+	extensions=("png" "jpg" "gif" "zip" "rar")
+	for i in "${extensions[@]}"; do
+		if [ $i != $file_type ]; then
+			analysis $i
+		fi
+	done
+}
 
 if [[ ! -z ${ext+x} ]]; then
 	case ${ext,,} in
@@ -132,13 +171,14 @@ data=$(file $outfile)
 data=${data##*:}
 result=$(echo $data | head -n1 | sed -e 's/\s.*$//')
 if [ $result = "empty" ]; then
-	echo "No hidden data found in file"
+	echo "No trailing data found in file"
 	rm $outfile
 	exit 1
 else
-	echo "Extracted hidden file data: "$data
+	echo "Extracted trailing file data: "$data
 	echo "Extracting strings..."
 	strings -6 $image > $outfile.txt
+	embedded_lookup
 	echo "Done"
 fi
 
