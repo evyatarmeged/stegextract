@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 if [ $# -eq 0 ]; then
   echo "Usage: stegextract <file> [options]"
   echo "stegextract -h for help"
@@ -14,8 +13,9 @@ while (( "$#" )); do
       echo " "
       echo "Usage: stegextract <file> [options]"
       echo "-h, --help                Print this and exit"
-      echo "--force-format            Force this image format instead of detecting"
       echo "-o, --outfile             Specify an outfile"
+      echo "-a, --analyze             Perform a deep analysis of embedded files"
+      echo "--force-format            Force this image format instead of detecting"
       exit 0
 			;;
     "-o"|"--outfile")
@@ -25,6 +25,10 @@ while (( "$#" )); do
     "--force-format")
       ext=$2
       shift 2
+      ;;
+    "-a"|"--analyze") # Analyze file hexdump for embedded files
+      analyze="True"
+      shift 1
       ;;
     --) # end argument parsing
       shift
@@ -36,6 +40,7 @@ while (( "$#" )); do
       ;;
     *) # preserve positional arguments
       image="$1"
+      stripped=${image%.*}
       shift
       ;;
   esac
@@ -58,7 +63,7 @@ if [ ! -f $image ]; then
 fi
 
 if [ -z ${outfile+x} ]; then
- outfile=${image%.*}"_dumps";
+ outfile=$stripped"_dumps";
 fi
 
 extract()  {
@@ -93,11 +98,10 @@ hard_extract() {
 	magic_no_ws=$(echo -e "$magic" | tr -d '[:space:]')
 	located=$(xxd -ps -c100 $image | grep  $magic_no_ws)
 	if [[ $located ]]; then
-		format_file=${image%.*}.$curr_ext
 		upper_ext=$(echo "$curr_ext" | tr /a-z/ /A-Z/)
 		echo "Found embedded: $upper_ext"
-		echo $magic | xxd -r -p > $format_file
-		xxd -c1 -p $image | tr "\n" " " | sed -n -e "s/.*\( $magic \)\(.*\).*/\2/p" | xxd -r -p >> $format_file
+		echo $magic | xxd -r -p > $stripped.$curr_ext
+		xxd -c1 -p $image | tr "\n" " " | sed -n -e "s/.*\( $magic \)\(.*\).*/\2/p" | xxd -r -p >> $stripped.$curr_ext
 	fi
 }
 
@@ -175,8 +179,11 @@ if [ $result = "empty" ]; then
 else
 	echo "Extracted trailing file data: "$data
 	echo "Extracting strings"
-	strings -6 $image > $outfile.txt
+	strings -6 $image > $stripped.txt
 fi
 
-embedded_lookup
+if [[ $analyze ]]; then
+	embedded_lookup
+fi
+
 echo "Done"
