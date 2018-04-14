@@ -2,10 +2,23 @@
 Bash script to extract hidden files and strings from images.
 
 ## Description
-Stegextract will detect the image type and will look for any trailing data after the image closing bytes.<br>
-Stegextract can detect basic hidden files but is not the solution for any color/pixel/filter/LSB related Steganography.<br>
+Stegextract will detect the input image type and will look for any trailing data after the closing bytes.<br>
+It will then try to detect and extract embedded files by magic numbers. Short byte combinations such as JPEG's `FFD8 FFE0`
+might sometimes create false positives.<br>
+Stegextract is not the solution for any color/pixel/filter/LSB related Steganography.<br>
 Also, manually reviewing the hexdump is sometimes inevitable in cases of highly complex embedded files.
-Currently supports JPG, PNG, and GIF.
+
+## Supported Formats
+ ##### Input Images
+  - PNG
+  - JPG
+  - GIF
+ ##### Embedded File Lookup
+	- PNG
+  - JPG
+  - GIF
+  - RAR
+  - ZIP
 
 ## Installation
 ```

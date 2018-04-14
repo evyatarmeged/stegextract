@@ -91,17 +91,15 @@ hard_extract() {
 	curr_ext="$1"
 	magic=${@:2}
 	magic_no_ws=$(echo -e "$magic" | tr -d '[:space:]')
-	echo $magic_no_ws
-	if [ "$(xxd -ps -c100 happypassover.jpg | grep -c $magic_no_ws)" -ge 0 ] ; then
-		echo "passed located"
-		format_file=$outfile"_secret_"$curr_ext
+	located=$(xxd -ps -c100 $image | grep  $magic_no_ws)
+	if [[ $located ]]; then
+		format_file=${image%.*}.$curr_ext
 		upper_ext=$(echo "$curr_ext" | tr /a-z/ /A-Z/)
 		echo "Found embedded: $upper_ext"
 		echo $magic | xxd -r -p > $format_file
-		xxd -c1 -p $image | tr "\n" " " | sed -n -e "s/.*\( $curr \)\(.*\).*/\2/p" | xxd -r -p >> $format_file
+		xxd -c1 -p $image | tr "\n" " " | sed -n -e "s/.*\( $magic \)\(.*\).*/\2/p" | xxd -r -p >> $format_file
 	fi
 }
-
 
 analysis() {
 	# Look for magic numbers in file except for the already detected image type
@@ -125,8 +123,9 @@ analysis() {
 }
 
 embedded_lookup() {
-# Try and better locate embedded files (e.g, no trailing data)
-	echo "Performing deep analysis..."
+# Try and better locate embedded files (i.e - not trailing data)
+	echo "Performing deep analysis"
+	# TODO: add TIFF, tar, gzip, bz, 7z...
 	extensions=("png" "jpg" "gif" "zip" "rar")
 	for i in "${extensions[@]}"; do
 		if [ $i != $file_type ]; then
@@ -173,16 +172,11 @@ result=$(echo $data | head -n1 | sed -e 's/\s.*$//')
 if [ $result = "empty" ]; then
 	echo "No trailing data found in file"
 	rm $outfile
-	exit 1
 else
 	echo "Extracted trailing file data: "$data
-	echo "Extracting strings..."
+	echo "Extracting strings"
 	strings -6 $image > $outfile.txt
-	embedded_lookup
-	echo "Done"
 fi
 
-
-
-# TODO: Consider adding Rar!.. & PK.. file signatures lookup and extraction
-# TODO: Consider image within image lookup and extraction
+embedded_lookup
+echo "Done"
