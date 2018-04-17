@@ -31,4 +31,4 @@ Usage: stegextract <file> [options]
 ## POC:
 ![poc](poc.gif)
 
-Image examples from the above GIF can be found in the `examples` folder.
+Image examples from the above GIF can be found in the [examples](https://github.com/evyatarmeged/stegextract/tree/master/examples) folder.
