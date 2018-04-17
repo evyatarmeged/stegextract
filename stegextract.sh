@@ -119,8 +119,8 @@ extract_embedded() {
 
 analysis() {
 	echo "Performing deep analysis"
-	# TODO: add TIFF, tar, gzip, bz, 7z...
-	extensions=("png" "jpg" "gif" "zip" "rar")
+	# Did not include zlib, bzip because of a high false positive percentage
+	extensions=("png" "jpg" "gif" "zip" "rar" "7z")
 	for i in "${extensions[@]}"; do
 		# Look for magic numbers in file except for the already detected image type
 		if [ $i != $file_type ]; then
@@ -139,6 +139,9 @@ analysis() {
 					;;
 				"rar")
 					extract_embedded "rar" "52 61 72 21 1a 07 01 00"
+					;;
+				"7z")
+					extract_embedded "7z" "37 7a bc af 27 1c"
 					;;
 			esac
 		fi
