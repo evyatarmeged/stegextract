@@ -108,7 +108,7 @@ extract_embedded() {
 	curr_ext="$1"
 	magic=${@:2}
 	magic_no_ws=$(echo -e "$magic" | tr -d '[:space:]')
-	located=$(xxd -ps -c100 $image | grep  $magic_no_ws)
+	located=$(xxd -ps -c1000 $image | grep  $magic_no_ws)
 	if [[ $located ]]; then
 		upper_ext=$(echo "$curr_ext" | tr /a-z/ /A-Z/)
 		echo "Found embedded: $upper_ext"
@@ -138,7 +138,7 @@ analysis() {
 					extract_embedded "zip" "50 3b 03 04"
 					;;
 				"rar")
-					extract_embedded "rar" "52 61 72 21 1a 07 01 00"
+					extract_embedded "rar" "52 61 72 21 1a 07"
 					;;
 				"7z")
 					extract_embedded "7z" "37 7a bc af 27 1c"
