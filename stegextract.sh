@@ -76,6 +76,13 @@ fi
 
 if [ -z ${outfile+x} ]; then
  outfile=$stripped"_dumps";
+elif [ -f $outfile ]; then
+	read -p "$outfile exists, overwrite ? (y/n) " choice
+	case "$choice" in
+	  y|Y ) :;;
+	  n|N ) echo "Exiting"; exit 1;;
+	  * ) echo "Invalid option"; exit 1;;
+	esac
 fi
 
 extract_trailing()  {
