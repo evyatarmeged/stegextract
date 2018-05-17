@@ -23,11 +23,11 @@ while (( "$#" )); do
       exit 0
 			;;
     "-o"|"--outfile")
-      outfile=$2
+      outfile="$2"
       shift 2
       ;;
     "--force-format")
-      ext=$2
+      ext="$2"
       shift 2
       ;;
     "-a"|"--analyze") # Analyze file hexdump for embedded files
@@ -60,23 +60,21 @@ done
 
 file_type=""
 
-jpg_start="ffd8"
-jpg_end="ff d9"
+readonly jpg_start="ffd8"
+readonly jpg_end="ff d9"
+readonly png_start="8950 4e47 0d0a 1a0a"
+readonly png_end="49 45 4e 44 ae 42 60 82"
+readonly gif_start="4749 4638 3961"
+readonly gif_end="00 3b"
 
-png_start="8950 4e47 0d0a 1a0a"
-png_end="49 45 4e 44 ae 42 60 82"
-
-gif_start="4749 4638 3961"
-gif_end="00 3b"
-
-if [ ! -f $image ]; then
+if [ ! -f "$image" ]; then
   echo "$0: File $image not found."
   exit 1
 fi
 
 if [ -z ${outfile+x} ]; then
  outfile=$stripped"_dumps";
-elif [ -f $outfile ]; then
+elif [ -f "$outfile" ]; then
 	read -p "$outfile exists, overwrite ? (y/n) " choice
 	case "$choice" in
 	  y|Y ) :;;
@@ -94,33 +92,34 @@ jpeg() {
 	file_type="jpg"
 	# Grab everything after 0xFF 0xD9
 	echo "Detected image format: JPG"
-	extract_trailing $jpg_end
+	extract_trailing "$jpg_end"
 }
 
 png() {
 	file_type="png"
 	# Grab everything after "IEND.B`" chunk
 	echo "Detected image format: PNG"
-	extract_trailing $png_end
+	extract_trailing "$png_end"
 }
 
 gif() {
 	file_type="gif"
 	# Grab everything after "0x00 0x3B"
 	echo "Detected image format: GIF"
-	extract_trailing $gif_end
+	extract_trailing "$gif_end"
 }
 
 extract_embedded() {
-	curr_ext="$1"
-	magic=${@:2}
+	local curr_ext="$1"; shift
+	magic="$@"
+
 	magic_no_ws=$(echo -e "$magic" | tr -d '[:space:]')
 	located=$(xxd -ps -c1000 $image | grep  $magic_no_ws)
 	if [[ $located ]]; then
 		upper_ext=$(echo "$curr_ext" | tr /a-z/ /A-Z/)
 		echo "Found embedded: $upper_ext"
-		echo $magic | xxd -r -p > $stripped.$curr_ext
-		xxd -c1 -p $image | tr "\n" " " | sed -n -e "s/.*\( $magic \)\(.*\).*/\2/p" | xxd -r -p >> $stripped.$curr_ext
+		echo "$magic" | xxd -r -p > "$stripped"."$curr_ext"
+		xxd -c1 -p "$image" | tr "\n" " " | sed -n -e "s/.*\( $magic \)\(.*\).*/\2/p" | xxd -r -p >> $stripped.$curr_ext
 	fi
 }
 
@@ -130,7 +129,7 @@ analysis() {
 	extensions=("png" "jpg" "gif" "zip" "rar" "7z")
 	for i in "${extensions[@]}"; do
 		# Look for magic numbers in file except for the already detected image type
-		if [ $i != $file_type ]; then
+		if [ "$i" != "$file_type" ]; then
 			case "$i" in
 				"png")
 					extract_embedded "png" "89 50 4e 47 0d 0a 1a 0a"
@@ -187,25 +186,25 @@ else
 	fi
 fi
 
-data=$(file $outfile)
+data=$(file "$outfile")
 data=${data##*:}
 result=$(echo $data | head -n1 | sed -e 's/\s.*$//')
 if [ $result = "empty" ]; then
 	echo "No trailing data found in file"
-	rm $outfile
-elif [ $result = "data" ]; then
+	rm "$outfile"
+elif [ "$result" = "data" ]; then
 	echo "Extracted trailing file data: binary data, might contain embedded files."
 else
 	echo "Extracted trailing file data: $data"
 fi
 
-if [[ $analyze ]]; then
+if [[ "$analyze" ]]; then
 	analysis
 fi
 
-if [[ $get_strings ]]; then
+if [[ "$get_strings" ]]; then
 	echo "Extracting strings..."
-	strings -6 $image > $stripped.txt
+	strings -6 "$image" > "$stripped".txt
 fi
 
 echo "Done"
