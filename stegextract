@@ -16,7 +16,6 @@ while (( "$#" )); do
       echo "Usage: stegextract <file> [options]"
       echo "-h, --help                Print this and exit"
       echo "-o, --outfile             Specify an outfile"
-      echo "-a, --analyze             Perform a deep analysis of embedded files"
       echo "-s, --strings             Extract strings from file"
       echo "-q, --quiet               Do not output to stdout"
       echo "--force-format            Force this image format instead of detecting"
@@ -29,10 +28,6 @@ while (( "$#" )); do
     "--force-format")
       ext="$2"
       shift 2
-      ;;
-    "-a"|"--analyze") # Analyze file hexdump for embedded files
-      analyze="true"
-      shift 1
       ;;
     "-s"|"--strings")
       get_strings="true"
@@ -124,7 +119,6 @@ extract_embedded() {
 }
 
 analysis() {
-	echo "Performing deep analysis"
 	# Did not include zlib, bzip because of a high false positive percentage
 	extensions=("png" "jpg" "gif" "zip" "rar" "7z")
 	for i in "${extensions[@]}"; do
@@ -198,15 +192,14 @@ else
 	echo "Extracted trailing file data: $data"
 fi
 
-if [[ "$analyze" ]]; then
-	analysis
-fi
 
 if [[ "$get_strings" ]]; then
 	echo "Extracting strings..."
 	strings -6 "$image" > "$stripped".txt
 fi
 
+echo "Performing deep analysis"
+analysis
 echo "Done"
 
 exec 1>&6 6>&-
