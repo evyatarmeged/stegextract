@@ -12,7 +12,7 @@ Currently supports PNG, JPG, and GIF.
 ## Installation
 ```
 sudo curl https://raw.githubusercontent.com/evyatarmeged/stegextract/master/stegextract > /usr/local/bin/stegextract
-sudo chmod +x /bin/stegextract
+sudo chmod +x /usr/local/bin/stegextract
 ```
 
 ## Usage
