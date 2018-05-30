@@ -9,6 +9,8 @@ Stegextract is not the solution for any color/pixel/filter/LSB related Steganogr
 relies on magic numbers, hexdumps and binary data alone.<br>
 Currently supports PNG, JPG, and GIF.
 
+**Update**: `--analyze` flag was deprecated and is now being performed automatically with every scan.
+
 ## Installation
 ```
 sudo curl https://raw.githubusercontent.com/evyatarmeged/stegextract/master/stegextract > /usr/local/bin/stegextract
