@@ -18,6 +18,7 @@ sudo chmod +x /usr/local/bin/stegextract
 ```
 
 ## Usage
+> Note: This utility uses command `xxd` so make sure you have package `gvim` or `vim-commons` installed.
 ```
 Usage: stegextract <file> [options]
 
