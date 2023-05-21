@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+command -v xxd >/dev/null 2>&1 || {
+  echo "This program requires command 'xxd' which is not installed. Please install it before running this program.";
+  exit 1;
+}
+command -v grep >/dev/null 2>&1 || {
+  echo "This program requires command 'grep' which is not installed. Please install it before running this program.";
+  exit 1;
+}
+
 exec 6>&1
 
 if [ $# -eq 0 ]; then
